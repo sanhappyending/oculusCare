@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "{config.json,model.weights.h5}",
+      "excludeFiles": "{.venv/**,DESIGN.md,metadata.json}"
+    }
+  }
+}
