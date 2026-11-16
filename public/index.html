@@ -93,14 +93,22 @@
               <div class="viewfinder" id="viewfinder" hidden><span class="corner corner-tl"></span><span class="corner corner-tr"></span><span class="corner corner-bl"></span><span class="corner corner-br"></span><span class="aim-line"></span><span class="aim-label">POSISIKAN MATA DI SINI</span></div>
               <div class="camera-status" id="cameraStatus"><span class="status-dot"></span><span id="cameraStatusText">MENUNGGU KAMERA</span></div>
             </div>
+            <div class="camera-zoom" id="cameraZoom" hidden><span class="zoom-label">ZOOM <strong id="zoomValue">1.0×</strong></span><button class="zoom-button" id="zoomOut" type="button" aria-label="Kurangi zoom">−</button><input id="zoomRange" type="range" min="1" max="3" step="0.1" value="1" aria-label="Zoom kamera" /><button class="zoom-button" id="zoomIn" type="button" aria-label="Tambah zoom">+</button></div>
             <p class="camera-help" id="cameraHelp">Pastikan ruangan cukup terang dan lepaskan kacamata jika memungkinkan.</p>
             <div class="camera-controls"><button class="button button-primary" id="startCamera"><span class="button-icon">◎</span> Aktifkan kamera</button><button class="button button-primary" id="capturePhoto" hidden><span class="button-icon">◉</span> Ambil gambar</button><button class="button button-secondary" id="retakePhoto" hidden>Ulangi foto</button></div>
             <div class="error-message" id="cameraError" role="alert" hidden></div>
           </section>
-          <aside class="result-card" aria-live="polite"><div class="camera-step">LANGKAH 02</div><h2>Hasil pemeriksaan</h2><p class="result-intro" id="resultIntro">Hasil persentase akan muncul setelah gambar mata dianalisis.</p>
-            <div class="result-empty" id="resultEmpty"><div class="result-ring empty-ring"><span>—</span></div><span>Menunggu gambar mata</span></div>
-            <div class="result-data" id="resultData" hidden><div class="result-ring" id="resultRing"><div><strong id="mainPercent">—%</strong><span id="mainLabel">Katarak</span></div></div><div class="result-rows"><div class="result-row"><span><i class="result-dot cataract-dot"></i> Katarak</span><b id="cataractPercent">—%</b></div><div class="result-track"><span class="track-cataract" id="cataractBar"></span></div><div class="result-row"><span><i class="result-dot normal-dot"></i> Normal</span><b id="normalPercent">—%</b></div><div class="result-track"><span class="track-normal" id="normalBar"></span></div></div></div>
-            <div class="result-footnote" id="resultFootnote" hidden><span>ⓘ</span><p>Hasil ini hanya skrining awal berbasis AI, bukan diagnosis medis. Konsultasikan dengan dokter mata untuk pemeriksaan lebih lanjut.</p></div>
+          <aside class="result-card receipt-card" aria-live="polite"><div class="camera-step">LANGKAH 02 — HASIL ANALISIS</div>
+            <div class="receipt-paper">
+              <header class="receipt-header"><img src="/logo_white.png" alt="Oculus Care" /><span>RINGKASAN SKRINING</span></header>
+              <div class="receipt-rule"></div>
+              <div class="receipt-meta"><span>WAKTU PEMERIKSAAN</span><time id="resultDate">—</time></div>
+              <h2>Hasil skrining mata</h2>
+              <div class="result-empty" id="resultEmpty"><div class="result-ring empty-ring"><span>—</span></div><span>Menunggu gambar mata</span></div>
+              <div class="result-data" id="resultData" hidden><div class="result-ring" id="resultRing"><div><strong id="mainPercent">—%</strong><span id="mainLabel">Katarak</span></div></div><div class="result-rows"><div class="result-row"><span><i class="result-dot cataract-dot"></i> Indikasi Katarak</span><b id="cataractPercent">—%</b></div><div class="result-track"><span class="track-cataract" id="cataractBar"></span></div><div class="result-row"><span><i class="result-dot normal-dot"></i> Normal</span><b id="normalPercent">—%</b></div><div class="result-track"><span class="track-normal" id="normalBar"></span></div></div></div>
+              <button class="button button-secondary print-receipt" id="printReceipt" type="button" hidden>⎙ Cetak struk thermal 58 mm</button>
+              <footer class="receipt-footer"><span>OCULUS CARE — SEE EARLY, CARE BETTER.</span><small>Alat bantu skrining awal, bukan diagnosis medis.</small></footer>
+            </div>
           </aside>
         </div>
         <p class="medical-note"><span>✳</span> Hasil pemeriksaan AI tidak menggantikan diagnosis profesional. Jika mengalami gangguan penglihatan, hubungi tenaga kesehatan.</p>

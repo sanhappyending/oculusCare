@@ -18,13 +18,21 @@ if (isCheckPage) {
   const startButton = document.getElementById('startCamera');
   const captureButton = document.getElementById('capturePhoto');
   const retakeButton = document.getElementById('retakePhoto');
+  const zoomControls = document.getElementById('cameraZoom');
+  const zoomRange = document.getElementById('zoomRange');
+  const zoomValue = document.getElementById('zoomValue');
+  const zoomOut = document.getElementById('zoomOut');
+  const zoomIn = document.getElementById('zoomIn');
   const errorBox = document.getElementById('cameraError');
   const resultEmpty = document.getElementById('resultEmpty');
   const resultData = document.getElementById('resultData');
-  const resultIntro = document.getElementById('resultIntro');
-  const resultFootnote = document.getElementById('resultFootnote');
+  const resultDate = document.getElementById('resultDate');
+  const printReceipt = document.getElementById('printReceipt');
   let stream = null;
   let capturedBlob = null;
+  let cameraTrack = null;
+  let hardwareZoom = false;
+  let nativeZoomLevel = 1;
 
   function showError(message) {
     errorBox.textContent = message;
@@ -44,6 +52,23 @@ if (isCheckPage) {
     }
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false });
+      cameraTrack = stream.getVideoTracks()[0];
+      const zoomCapability = cameraTrack.getCapabilities?.().zoom;
+      hardwareZoom = Boolean(zoomCapability && zoomCapability.max > zoomCapability.min && cameraTrack.applyConstraints);
+      if (hardwareZoom) {
+        const settingsZoom = cameraTrack.getSettings?.().zoom;
+        const minZoom = Number(zoomCapability.min) || 1;
+        const maxZoom = Math.min(5, Number(zoomCapability.max));
+        nativeZoomLevel = Math.min(maxZoom, Math.max(minZoom, Number(settingsZoom) || minZoom));
+        zoomRange.min = String(minZoom);
+        zoomRange.max = String(maxZoom);
+      } else {
+        nativeZoomLevel = 1;
+        zoomRange.min = '1';
+        zoomRange.max = '3';
+      }
+      zoomRange.value = String(nativeZoomLevel);
+      zoomValue.textContent = `${nativeZoomLevel.toFixed(1)}×`;
       video.srcObject = stream;
       video.hidden = false;
       placeholder.hidden = true;
@@ -51,7 +76,9 @@ if (isCheckPage) {
       startButton.hidden = true;
       captureButton.hidden = false;
       retakeButton.hidden = true;
+      zoomControls.hidden = false;
       canvas.classList.remove('preview');
+      video.style.transform = `scaleX(-1) scale(${hardwareZoom ? 1 : nativeZoomLevel})`;
       setCameraActive(true);
     } catch (error) {
       const message = error.name === 'NotAllowedError'
@@ -64,6 +91,27 @@ if (isCheckPage) {
   function stopCamera() {
     stream?.getTracks().forEach((track) => track.stop());
     stream = null;
+    cameraTrack = null;
+  }
+
+  async function updateZoom() {
+    const requestedZoom = Number(zoomRange.value);
+    zoomValue.textContent = `${requestedZoom.toFixed(1)}×`;
+    errorBox.hidden = true;
+
+    if (hardwareZoom && cameraTrack) {
+      try {
+        await cameraTrack.applyConstraints({ advanced: [{ zoom: requestedZoom }] });
+        nativeZoomLevel = requestedZoom;
+        video.style.transform = 'scaleX(-1)';
+        return;
+      } catch {
+        hardwareZoom = false;
+      }
+    }
+
+    const digitalZoom = requestedZoom / nativeZoomLevel;
+    video.style.transform = `scaleX(-1) scale(${digitalZoom})`;
   }
 
   function resetCapture() {
@@ -73,12 +121,12 @@ if (isCheckPage) {
     canvas.classList.remove('preview');
     canvas.hidden = true;
     viewfinder.hidden = false;
+    zoomControls.hidden = false;
     retakeButton.hidden = true;
     captureButton.hidden = false;
     resultEmpty.hidden = false;
     resultData.hidden = true;
-    resultFootnote.hidden = true;
-    resultIntro.textContent = 'Hasil persentase akan muncul setelah gambar mata dianalisis.';
+    printReceipt.hidden = true;
   }
 
   function capturePhoto() {
@@ -86,7 +134,8 @@ if (isCheckPage) {
       showError('Kamera sedang disiapkan. Tunggu sebentar, lalu ambil gambar.');
       return;
     }
-    const size = Math.min(video.videoWidth, video.videoHeight);
+    const zoom = hardwareZoom ? 1 : Number(zoomRange.value) / nativeZoomLevel;
+    const size = Math.min(video.videoWidth, video.videoHeight) / zoom;
     const sx = (video.videoWidth - size) / 2;
     const sy = (video.videoHeight - size) / 2;
     canvas.width = 720;
@@ -102,6 +151,7 @@ if (isCheckPage) {
       canvas.hidden = false;
       canvas.classList.add('preview');
       viewfinder.hidden = true;
+      zoomControls.hidden = true;
       captureButton.hidden = true;
       retakeButton.hidden = false;
       errorBox.hidden = true;
@@ -112,8 +162,7 @@ if (isCheckPage) {
   async function analyze(blob) {
     resultEmpty.hidden = true;
     resultData.hidden = true;
-    resultFootnote.hidden = true;
-    resultIntro.textContent = 'Gambar sedang dianalisis oleh model AI…';
+    printReceipt.hidden = true;
     statusText.textContent = 'MENGANALISIS GAMBAR';
     const form = new FormData();
     form.append('image', blob, 'eye.jpg');
@@ -125,6 +174,10 @@ if (isCheckPage) {
       const normal = Number(data.normal);
       const likelyLabel = cataract >= normal ? 'Katarak' : 'Normal';
       const likelyPercent = Math.max(cataract, normal);
+      resultDate.textContent = new Intl.DateTimeFormat('id-ID', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(new Date());
       document.getElementById('mainPercent').textContent = `${likelyPercent.toFixed(1)}%`;
       document.getElementById('mainLabel').textContent = likelyLabel;
       document.getElementById('cataractPercent').textContent = `${cataract.toFixed(1)}%`;
@@ -134,11 +187,10 @@ if (isCheckPage) {
       document.getElementById('resultRing').style.background = `conic-gradient(#b3d2f5 ${likelyPercent * 3.6}deg, rgba(186,215,247,.08) 0deg)`;
       resultEmpty.hidden = true;
       resultData.hidden = false;
-      resultFootnote.hidden = false;
-      resultIntro.textContent = 'Perkiraan model untuk gambar yang kamu ambil.';
+      printReceipt.hidden = false;
     } catch (error) {
       resultEmpty.hidden = false;
-      resultIntro.textContent = 'Analisis belum berhasil diselesaikan.';
+      printReceipt.hidden = true;
       showError(error.message);
     } finally {
       statusText.textContent = 'FOTO SIAP';
@@ -148,5 +200,9 @@ if (isCheckPage) {
   startButton.addEventListener('click', startCamera);
   captureButton.addEventListener('click', capturePhoto);
   retakeButton.addEventListener('click', resetCapture);
+  zoomRange.addEventListener('input', updateZoom);
+  zoomOut.addEventListener('click', () => zoomRange.stepDown());
+  zoomIn.addEventListener('click', () => zoomRange.stepUp());
+  printReceipt.addEventListener('click', () => window.print());
   window.addEventListener('pagehide', stopCamera);
 }
