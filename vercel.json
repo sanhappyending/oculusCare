@@ -5,5 +5,11 @@
       "includeFiles": "{config.json,model.weights.h5}",
       "excludeFiles": "{.venv/**,DESIGN.md,metadata.json}"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/periksa",
+      "destination": "/index.html"
+    }
+  ]
 }
