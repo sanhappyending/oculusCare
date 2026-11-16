@@ -72,3 +72,15 @@ def get_model():
 
 if __name__ == "__main__":
     create_app().run(host="127.0.0.1", port=int(os.environ.get("PORT", "5000")), debug=False)
+
+# Flask instance global untuk Vercel
+app = create_app()
+
+
+# Menjalankan aplikasi secara lokal
+if __name__ == "__main__":
+    app.run(
+        host="127.0.0.1",
+        port=int(os.environ.get("PORT", "5000")),
+        debug=False
+    )
